@@ -30,15 +30,15 @@ type Routes []Route
 func NewRouter() *mux.Router {
 	router := mux.NewRouter().StrictSlash(true)
 	for _, route := range routes {
-		var handler http.Handler
-		handler = route.HandlerFunc
-		handler = middleware.Logger(handler, route.Name)
+		handler := route.HandlerFunc
+		authHandler := middleware.Auth(handler) //!Не все методы требуют аутентификацию по ключу
+		logHandler := middleware.Logger(authHandler, route.Name)
 
 		router.
 			Methods(route.Method).
 			Path(route.Pattern).
 			Name(route.Name).
-			Handler(handler)
+			Handler(logHandler)
 	}
 
 	return router
