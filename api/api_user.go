@@ -21,7 +21,7 @@ func RegistrationUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 
 	decoder := json.NewDecoder(r.Body)
-	var data model.UserRegLoginData
+	var data model.UserRegData
 	err := decoder.Decode(&data)
 	fmt.Printf("request: %v\n", data)
 	if err != nil {
@@ -42,6 +42,31 @@ func RegistrationUser(w http.ResponseWriter, r *http.Request) {
 func LoginUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
+
+	decoder := json.NewDecoder(r.Body)
+	var data model.UserLoginData
+	err := decoder.Decode(&data)
+	fmt.Printf("request: %v\n", data)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(fmt.Sprintf("{\"error\":\"%v\"}", err)))
+		return
+	}
+
+	info, err := database.Login(data)
+	if err != nil {
+		fmt.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	result, err := json.Marshal(info)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write(result)
 }
 
 func LogoutUser(w http.ResponseWriter, r *http.Request) {

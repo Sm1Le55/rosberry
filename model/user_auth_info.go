@@ -10,7 +10,7 @@
 package model
 
 type UserAuthInfo struct {
-	UserId int32 `json:"userId,omitempty"`
+	UserId int `json:"userId,omitempty"`
 
 	AccessKey string `json:"accessKey,omitempty"`
 }
