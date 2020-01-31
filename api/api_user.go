@@ -41,7 +41,6 @@ func RegistrationUser(w http.ResponseWriter, r *http.Request) {
 
 func LoginUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	w.WriteHeader(http.StatusOK)
 
 	decoder := json.NewDecoder(r.Body)
 	var data model.UserLoginData
@@ -103,16 +102,17 @@ func GetDisplaySettings(w http.ResponseWriter, r *http.Request) {
 func SetDisplaySettings(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 
-	t := model.DisplaySettings{
-		UserID:         1,
-		ShowMeAges:     4,
-		HideMeFromAges: 4,
-		ShowThemesID:   []int{1, 3, 5},
-		HideThemesID:   []int{2, 4},
-		Location:       3,
+	decoder := json.NewDecoder(r.Body)
+	var data model.DisplaySettings
+	err := decoder.Decode(&data)
+	fmt.Printf("request: %v\n", data)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(fmt.Sprintf("{\"error\":\"%v\"}", err)))
+		return
 	}
 
-	err := database.SaveDisplaySettings(&t)
+	err = database.SaveDisplaySettings(&data)
 	if err != nil {
 		fmt.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
