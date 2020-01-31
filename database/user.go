@@ -8,6 +8,15 @@ import (
 	"time"
 )
 
+type AgeRange string
+
+const (
+	AgeRangeAll     AgeRange = "all"
+	AgeRangeBt18n24 AgeRange = "18-24"
+	AgeRangeBt25n40 AgeRange = "25-40"
+	AgeRangeMore40  AgeRange = "40+"
+)
+
 func AuthQuery(userID int, accessKey string) AuthResult {
 	var validAccessKey string
 	var accessKeyDateExpired time.Time
@@ -141,6 +150,96 @@ func Logout(email string) error {
 	return nil
 }
 
-func DisplatSettingsQuery(userID int) (*model.DisplaySettings, error) {
-	return nil, nil
+func DisplaySettingsQuery(userID int) (*model.DisplaySettings, error) {
+	showRange, hideRange := ageSettingsQuery(userID)
+	showIntr := showIntrQuery(userID)
+	hideIntr := hideIntrQuery(userID)
+	location := locationQuery(userID)
+	result := model.DisplaySettings{
+		UserId:         userID,
+		ShowMeAges:     showRange,
+		HideMeFromAges: hideRange,
+		ShowThemesID:   showIntr,
+		HideThemesID:   hideIntr,
+		Location:       location,
+	}
+
+	return &result, nil
+}
+
+func ageSettingsQuery(userID int) (string, string) {
+	qAge := "SELECT userID, showRangeForMe, hideMeByRange" +
+		"FROM rosberry_fsm.profile, rosberry_fsm.AgeSettings" +
+		"WHERE AgeSettings.profile = profile.ID AND profile.userID = $1"
+
+	var showRange, hideRange string
+	err := db.QueryRow(qAge, userID).Scan(&showRange, &hideRange)
+	if err != nil {
+		fmt.Printf("Error database query: %\n", err)
+		return "", ""
+	}
+	return showRange, hideRange
+}
+
+func showIntrQuery(userID int) []int {
+	qShowIntr := "SELECT theme" +
+		"FROM rosberry_fsm.profile, rosberry_fsm.ShowInterestsSettings" +
+		"WHERE ShowInterestsSettings.profile = profile.ID AND profile.userID = $1"
+
+	rows, err := db.Query(qShowIntr, userID)
+	if err != nil {
+		return nil
+	}
+	defer rows.Close()
+
+	result := make([]int, 0)
+	for rows.Next() {
+		var intrID int
+		err := rows.Scan(&intrID)
+		if err != nil {
+			fmt.Printf("Error row scan: %v\n", err)
+			continue
+		}
+		result = append(result, intrID)
+	}
+	return result
+}
+
+func hideIntrQuery(userID int) []int {
+	qHideIntr := "SELECT theme" +
+		"FROM rosberry_fsm.profile, rosberry_fsm.HideInterestsSettings" +
+		"WHERE HideInterestsSettings.profile = profile.ID AND profile.userID = $1"
+
+	rows, err := db.Query(qHideIntr, userID)
+	if err != nil {
+		return nil
+	}
+	defer rows.Close()
+
+	result := make([]int, 0)
+	for rows.Next() {
+		var intrID int
+		err := rows.Scan(&intrID)
+		if err != nil {
+			fmt.Printf("Error row scan: %v\n", err)
+			continue
+		}
+		result = append(result, intrID)
+	}
+	return result
+}
+
+func locationQuery(userID int) string {
+	q := "SELECT title" +
+		"FROM rosberry_fsm.profile, rosberry_fsm.locationSettings, rosberry_fsm.locations" +
+		"WHERE locationSettings.profile = profile.ID and" +
+		"locationSettings.location = locations.ID and profile.userID = $1"
+
+	var location string
+	err := db.QueryRow(q, userID).Scan(&location)
+	if err != nil {
+		fmt.Printf("Error database query: %\n", err)
+		return ""
+	}
+	return location
 }
