@@ -116,7 +116,7 @@ ALTER TABLE ShowInterestsSettings ADD CONSTRAINT ShowInterestsSettings_fk1 FOREI
 ALTER TABLE HideInterestsSettings ADD CONSTRAINT HideInterestsSettings_fk0 FOREIGN KEY (userID) REFERENCES Users(ID);
 ALTER TABLE HideInterestsSettings ADD CONSTRAINT HideInterestsSettings_fk1 FOREIGN KEY (theme) REFERENCES Themes(ID);
 
-ALTER TABLE ProfileInterest ADD CONSTRAINT ProfileInterest_fk0 FOREIGN KEY (profile) userID Users(ID);
+ALTER TABLE ProfileInterest ADD CONSTRAINT ProfileInterest_fk0 FOREIGN KEY (userID) Users(ID);
 ALTER TABLE ProfileInterest ADD CONSTRAINT ProfileInterest_fk1 FOREIGN KEY (theme) REFERENCES Themes(ID);
 
 INSERT INTO Themes (title)
