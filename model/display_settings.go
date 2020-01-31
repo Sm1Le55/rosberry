@@ -9,11 +9,25 @@
 
 package model
 
+type AgeRange int
+type LocationType int
+
+const (
+	AgeRangeAll AgeRange = iota + 1
+	AgeRangeBt18n24
+	AgeRangeBt25n40
+	AgeRangeMore40
+
+	LocationWorld LocationType = iota + 1
+	LocationCountry
+	LocationNearby
+)
+
 type DisplaySettings struct {
-	UserId         int    `json:"userId,omitempty"`
-	ShowMeAges     string `json:"showMeAges,omitempty"`
-	HideMeFromAges string `json:"hideMeFromAges,omitempty"`
-	ShowThemesID   []int  `json:"showThemesId,omitempty"`
-	HideThemesID   []int  `json:"hideThemesId,omitempty"`
-	Location       string `json:"location,omitempty"`
+	UserID         int          `json:"userId,omitempty"`
+	ShowMeAges     AgeRange     `json:"showMeAges,omitempty"`
+	HideMeFromAges AgeRange     `json:"hideMeFromAges,omitempty"`
+	ShowThemesID   []int        `json:"showThemesId,omitempty"`
+	HideThemesID   []int        `json:"hideThemesId,omitempty"`
+	Location       LocationType `json:"location,omitempty"`
 }

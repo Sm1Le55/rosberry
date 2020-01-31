@@ -116,8 +116,8 @@ ALTER TABLE ShowInterestsSettings ADD CONSTRAINT ShowInterestsSettings_fk1 FOREI
 ALTER TABLE HideInterestsSettings ADD CONSTRAINT HideInterestsSettings_fk0 FOREIGN KEY (userID) REFERENCES Users(ID);
 ALTER TABLE HideInterestsSettings ADD CONSTRAINT HideInterestsSettings_fk1 FOREIGN KEY (theme) REFERENCES Themes(ID);
 
-ALTER TABLE ProfileInterest ADD CONSTRAINT ProfileInterest_fk0 FOREIGN KEY (userID) Users(ID);
-ALTER TABLE ProfileInterest ADD CONSTRAINT ProfileInterest_fk1 FOREIGN KEY (theme) REFERENCES Themes(ID);
+ALTER TABLE UserInterest ADD CONSTRAINT UserInterest_fk0 FOREIGN KEY (userID) REFERENCES Users(ID);
+ALTER TABLE UserInterest ADD CONSTRAINT UserInterest_fk1 FOREIGN KEY (theme) REFERENCES Themes(ID);
 
 INSERT INTO Themes (title)
 VALUES
@@ -154,21 +154,21 @@ VALUES
     (3, 'Dave','10.06.1977'),
     (4, 'Katy','16.08.1994');
 
-INSERT INTO LocationSettings (profile, location)
+INSERT INTO LocationSettings (userID, location)
 VALUES
     (1, 1),
     (2, 2),
     (3, 3),
     (4, 1);
 
-INSERT INTO AgeSettings (profile, showRangeForMe, hideMeByRange)
+INSERT INTO AgeSettings (userID, showRangeForMe, hideMeByRange)
 VALUES
     (1, 2, 3),
     (2, 3, 4),
     (3, 2, 1),
     (4, 1, 1);
 
-INSERT INTO ProfileInterest (profile, theme)
+INSERT INTO UserInterest (userID, theme)
 VALUES
     (1, 1),
     (1, 3),
@@ -179,7 +179,7 @@ VALUES
     (3, 2),
     (4, 4);
 
-INSERT INTO ShowInterestsSettings (profile, theme)
+INSERT INTO ShowInterestsSettings (userID, theme)
 VALUES
     (4, 1),
     (4, 3),
@@ -190,7 +190,7 @@ VALUES
     (1, 2),
     (1, 4);
 
-INSERT INTO HideInterestsSettings (profile, theme)
+INSERT INTO HideInterestsSettings (userID, theme)
 VALUES
     (4, 4),
     (4, 2),

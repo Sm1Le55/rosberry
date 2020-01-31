@@ -10,11 +10,11 @@
 package api
 
 import (
-	"rosberry/database"
-	"rosberry/model"
-	"net/http"
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"rosberry/database"
+	"rosberry/model"
 )
 
 func RegistrationUser(w http.ResponseWriter, r *http.Request) {
@@ -84,10 +84,39 @@ func LogoutUser(w http.ResponseWriter, r *http.Request) {
 
 func GetDisplaySettings(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	settings, err := database.DisplaySettingsQuery(1)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	result, err := json.Marshal(settings)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
 	w.WriteHeader(http.StatusOK)
+	w.Write(result)
 }
 
 func SetDisplaySettings(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+
+	t := model.DisplaySettings{
+		UserID:         1,
+		ShowMeAges:     4,
+		HideMeFromAges: 4,
+		ShowThemesID:   []int{1, 3, 5},
+		HideThemesID:   []int{2, 4},
+		Location:       3,
+	}
+
+	err := database.SaveDisplaySettings(&t)
+	if err != nil {
+		fmt.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 	w.WriteHeader(http.StatusOK)
 }
