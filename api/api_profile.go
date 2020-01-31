@@ -81,7 +81,7 @@ func ShowProfiles(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	profiles, err = database.ProfilesListQuery(&data)
+	profiles, err := database.ProfilesListQuery(&data)
 	if err != nil {
 		fmt.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
