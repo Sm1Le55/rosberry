@@ -12,7 +12,7 @@ package model
 import "time"
 
 type Profile struct {
-	UserId int `json:"userId,omitempty"`
+	UserID int `json:"userId,omitempty"`
 
 	Name string `json:"name,omitempty"`
 	// image data in base64
