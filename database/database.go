@@ -33,11 +33,36 @@ func NewDB() *sql.DB {
 	return db
 }
 
+func Registration(data model.UserRegLoginData) error {
+	if !emailValidation(data.Email) {
+		return errors.New("Not valid email")
+	}
+
+	if checkUserExist(data.Email) {
+		return errors.New("User alredy exists")
+	}
+
+	fmt.Printf("Email: %v passw: %v\n", data.Email, data.Password)
+	_, err := db.Exec("INSERT INTO rosberry_fsm.users (email, password) VALUES ($1, $2)", data.Email, data.Password)
+	if err != nil {
+		return errors.New(fmt.Sprintf("Query error: %v\n", err))
+	}
+	return nil
+}
+
+func emailValidation(email string) bool {
+	return true
+}
+
+func checkUserExist(email string) bool {
+	return false
+}
+
 func AuthQuery(userID int,accessKey string) AuthResult {
 	var validAccessKey string
 	var accessKeyDateExpired time.Time
  
-	err := db.QueryRow("SELECT accessKey, accessKeyExpireDate FROM profile WHERE ID = $1", userID).Scan(&validAccessKey, &accessKeyDateExpired)
+	err := db.QueryRow("SELECT accessKey, accessKeyExpireDate FROM users WHERE ID = $1", userID).Scan(&validAccessKey, &accessKeyDateExpired)
 	if err != nil {
 		fmt.Printf("Error database query: %\n", err)
 		return AuthResultUserNotFound
@@ -74,3 +99,4 @@ func ThemesListQuery() ([]model.Theme, error) {
 
 	return result, nil
 }
+

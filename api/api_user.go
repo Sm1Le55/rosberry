@@ -10,11 +10,32 @@
 package api
 
 import (
+	"rosberry/database"
+	"rosberry/model"
 	"net/http"
+	"encoding/json"
+	"fmt"
 )
 
-func GetDisplaySettings(w http.ResponseWriter, r *http.Request) {
+func RegistrationUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+
+	decoder := json.NewDecoder(r.Body)
+	var data model.UserRegLoginData
+	err := decoder.Decode(&data)
+	fmt.Printf("request: %v\n", data)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(fmt.Sprintf("{\"error\":\"%v\"}", err)))
+		return
+	}
+
+	err = database.Registration(data)
+	if err != nil {
+		fmt.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -28,7 +49,7 @@ func LogoutUser(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func RegistrationUser(w http.ResponseWriter, r *http.Request) {
+func GetDisplaySettings(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
 }
