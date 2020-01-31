@@ -15,6 +15,9 @@ import (
 	"net/http"
 	"rosberry/database"
 	"rosberry/model"
+	"strconv"
+
+	"github.com/gorilla/mux"
 )
 
 func RegistrationUser(w http.ResponseWriter, r *http.Request) {
@@ -83,7 +86,14 @@ func LogoutUser(w http.ResponseWriter, r *http.Request) {
 
 func GetDisplaySettings(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	settings, err := database.DisplaySettingsQuery(1)
+	userIDString := mux.Vars(r)["userId"]
+	userID, err := strconv.Atoi(userIDString)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	settings, err := database.DisplaySettingsQuery(userID)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
