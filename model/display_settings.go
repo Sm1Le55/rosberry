@@ -11,14 +11,9 @@ package model
 
 type DisplaySettings struct {
 	UserId int32 `json:"userId,omitempty"`
-
 	ShowMeAges string `json:"showMeAges,omitempty"`
-
 	HideMeFromAges string `json:"hideMeFromAges,omitempty"`
-
-	ShowThemes []string `json:"showThemes,omitempty"`
-
-	HideThemes []string `json:"hideThemes,omitempty"`
-
+	ShowThemesID []int `json:"showThemesId,omitempty"`
+	HideThemesID []int `json:"hideThemesId,omitempty"`
 	Location string `json:"location,omitempty"`
 }
