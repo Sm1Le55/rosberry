@@ -110,7 +110,7 @@ func Login(data model.UserLoginData) (model.UserAuthInfo, error) {
 	//set access key
 	accessKey := generateAccessKey()
 	accessKeyExpireDate := time.Now().Add(time.Hour*24*7)
-	_, err = db.Exec("UPDATE users SET accessKey = $1, accessKeyExpireDate =$2 where email = $3", accessKey, accessKeyExpireDate, data.Email)
+	_, err = db.Exec("UPDATE users SET accessKey = $1, accessKeyExpireDate =$2 where userID = $3", accessKey, accessKeyExpireDate, userID)
 	if err != nil {
 		return model.UserAuthInfo{}, errors.New("Key issue error: " + err.Error())
 	}
@@ -148,6 +148,24 @@ func generateAccessKey() string {
 	return fmt.Sprintf("%x", key)
 }
 
+func Logout(email string) error {
+	//!!TODO: logout only current user
+	if !emailValidation(email) {
+		return errors.New("Not valid email")
+	}
+
+	userID := getUserID(email)
+	if userID == 0{
+		return errors.New("User not exists")
+	}
+
+	_, err := db.Exec("UPDATE users SET accessKeyExpireDate = $1 where id = $2", time.Now(), userID)
+	if err != nil {
+		return errors.New("Key issue error: " + err.Error())
+	}
+
+	return nil
+}
 
 func ThemesListQuery() ([]model.Theme, error) {
 	rows, err := db.Query("SELECT ID, title FROM themes")

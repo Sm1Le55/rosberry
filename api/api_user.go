@@ -70,7 +70,15 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func LogoutUser(w http.ResponseWriter, r *http.Request) {
+	//clear access key in db
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	email := r.FormValue("email")
+
+	err := database.Logout(email)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 	w.WriteHeader(http.StatusOK)
 }
 
