@@ -36,7 +36,7 @@ CREATE TABLE Locations (
 );
 
 CREATE TABLE LocationSettings (
-    profile integer NOT NULL,
+    userID integer NOT NULL UNIQUE,
     location integer NOT NULL
 ) WITH (
   OIDS=FALSE
@@ -54,7 +54,7 @@ CREATE TABLE AuthHistory (
 );
 
 CREATE TABLE AgeSettings (
-	profile integer NOT NULL,
+	userID integer NOT NULL UNIQUE,
 	showRangeForMe integer NOT NULL,
 	hideMeByRange integer NOT NULL
 ) WITH (
@@ -72,7 +72,7 @@ CREATE TABLE AgeRanges (
 );
 
 CREATE TABLE ShowInterestsSettings (
-	profile integer NOT NULL,
+	userID integer NOT NULL,
 	theme integer NOT NULL
 ) WITH (
   OIDS=FALSE
@@ -87,14 +87,14 @@ CREATE TABLE Themes (
 );
 
 CREATE TABLE HideInterestsSettings (
-	profile integer NOT NULL,
+	userID integer NOT NULL,
 	theme integer NOT NULL
 ) WITH (
   OIDS=FALSE
 );
 
-CREATE TABLE ProfileInterest (
-	profile integer NOT NULL,
+CREATE TABLE UserInterest (
+	userID integer NOT NULL,
 	theme integer NOT NULL
 ) WITH (
   OIDS=FALSE
@@ -103,20 +103,20 @@ CREATE TABLE ProfileInterest (
 ALTER TABLE Profile ADD CONSTRAINT Profile_fk0 FOREIGN KEY (userID) REFERENCES Users(ID);
 ALTER TABLE AuthHistory ADD CONSTRAINT AuthHistory_fk0 FOREIGN KEY (userID) REFERENCES Users(ID);
 
-ALTER TABLE LocationSettings ADD CONSTRAINT AgeSettings_fk0 FOREIGN KEY (profile) REFERENCES Profile(ID);
+ALTER TABLE LocationSettings ADD CONSTRAINT AgeSettings_fk0 FOREIGN KEY (userID) REFERENCES Users(ID);
 ALTER TABLE LocationSettings ADD CONSTRAINT AgeSettings_fk1 FOREIGN KEY (location) REFERENCES Locations(ID);
 
-ALTER TABLE AgeSettings ADD CONSTRAINT AgeSettings_fk0 FOREIGN KEY (profile) REFERENCES Profile(ID);
+ALTER TABLE AgeSettings ADD CONSTRAINT AgeSettings_fk0 FOREIGN KEY (userID) REFERENCES Users(ID);
 ALTER TABLE AgeSettings ADD CONSTRAINT AgeSettings_fk1 FOREIGN KEY (showRangeForMe) REFERENCES AgeRanges(ID);
 ALTER TABLE AgeSettings ADD CONSTRAINT AgeSettings_fk2 FOREIGN KEY (hideMeByRange) REFERENCES AgeRanges(ID);
 
-ALTER TABLE ShowInterestsSettings ADD CONSTRAINT ShowInterestsSettings_fk0 FOREIGN KEY (profile) REFERENCES Profile(ID);
+ALTER TABLE ShowInterestsSettings ADD CONSTRAINT ShowInterestsSettings_fk0 FOREIGN KEY (userID) REFERENCES Users(ID);
 ALTER TABLE ShowInterestsSettings ADD CONSTRAINT ShowInterestsSettings_fk1 FOREIGN KEY (theme) REFERENCES Themes(ID);
 
-ALTER TABLE HideInterestsSettings ADD CONSTRAINT HideInterestsSettings_fk0 FOREIGN KEY (profile) REFERENCES Profile(ID);
+ALTER TABLE HideInterestsSettings ADD CONSTRAINT HideInterestsSettings_fk0 FOREIGN KEY (userID) REFERENCES Users(ID);
 ALTER TABLE HideInterestsSettings ADD CONSTRAINT HideInterestsSettings_fk1 FOREIGN KEY (theme) REFERENCES Themes(ID);
 
-ALTER TABLE ProfileInterest ADD CONSTRAINT ProfileInterest_fk0 FOREIGN KEY (profile) REFERENCES Profile(ID);
+ALTER TABLE ProfileInterest ADD CONSTRAINT ProfileInterest_fk0 FOREIGN KEY (profile) userID Users(ID);
 ALTER TABLE ProfileInterest ADD CONSTRAINT ProfileInterest_fk1 FOREIGN KEY (theme) REFERENCES Themes(ID);
 
 INSERT INTO Themes (title)

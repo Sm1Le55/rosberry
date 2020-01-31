@@ -55,6 +55,7 @@ func Registration(data model.UserRegData) error {
 	return nil
 }
 
+//!!! Stub!
 func emailValidation(email string) bool {
 	return true
 }
@@ -168,9 +169,9 @@ func DisplaySettingsQuery(userID int) (*model.DisplaySettings, error) {
 }
 
 func ageSettingsQuery(userID int) (string, string) {
-	qAge := "SELECT userID, showRangeForMe, hideMeByRange" +
-		"FROM rosberry_fsm.profile, rosberry_fsm.AgeSettings" +
-		"WHERE AgeSettings.profile = profile.ID AND profile.userID = $1"
+	qAge := "SELECT showRangeForMe, hideMeByRange" +
+		"FROM rosberry_fsm.users, rosberry_fsm.AgeSettings" +
+		"WHERE AgeSettings.userID = users.ID AND users.ID = $1"
 
 	var showRange, hideRange string
 	err := db.QueryRow(qAge, userID).Scan(&showRange, &hideRange)
@@ -183,8 +184,8 @@ func ageSettingsQuery(userID int) (string, string) {
 
 func showIntrQuery(userID int) []int {
 	qShowIntr := "SELECT theme" +
-		"FROM rosberry_fsm.profile, rosberry_fsm.ShowInterestsSettings" +
-		"WHERE ShowInterestsSettings.profile = profile.ID AND profile.userID = $1"
+		"FROM rosberry_fsm.users, rosberry_fsm.ShowInterestsSettings" +
+		"WHERE ShowInterestsSettings.userID = users.ID AND users.ID = $1"
 
 	rows, err := db.Query(qShowIntr, userID)
 	if err != nil {
@@ -207,8 +208,8 @@ func showIntrQuery(userID int) []int {
 
 func hideIntrQuery(userID int) []int {
 	qHideIntr := "SELECT theme" +
-		"FROM rosberry_fsm.profile, rosberry_fsm.HideInterestsSettings" +
-		"WHERE HideInterestsSettings.profile = profile.ID AND profile.userID = $1"
+		"FROM rosberry_fsm.users, rosberry_fsm.HideInterestsSettings" +
+		"WHERE HideInterestsSettings.userID = users.ID AND users.ID = $1"
 
 	rows, err := db.Query(qHideIntr, userID)
 	if err != nil {
@@ -231,9 +232,9 @@ func hideIntrQuery(userID int) []int {
 
 func locationQuery(userID int) string {
 	q := "SELECT title" +
-		"FROM rosberry_fsm.profile, rosberry_fsm.locationSettings, rosberry_fsm.locations" +
-		"WHERE locationSettings.profile = profile.ID and" +
-		"locationSettings.location = locations.ID and profile.userID = $1"
+		"FROM rosberry_fsm.users, rosberry_fsm.locationSettings, rosberry_fsm.locations" +
+		"WHERE locationSettings.userID = users.ID and" +
+		"locationSettings.location = locations.ID and users.ID = $1"
 
 	var location string
 	err := db.QueryRow(q, userID).Scan(&location)
@@ -242,4 +243,19 @@ func locationQuery(userID int) string {
 		return ""
 	}
 	return location
+}
+
+func SaveDisplaySettings(settings *model.DisplaySettings) error {
+	return nil
+}
+
+func updAgeSettings(userID int, sett *model.DisplaySettings) error {
+	q := "INSERT INTO rosberry_fsm.AgeSettings (userID, showRangeForMe, hideMeByRange)" +
+		"VALUES	($1, $2, $3) ON CONFLICT (userID) DO UPDATE SET (showRangeForMe, hideMeByRange) = ($2, $3);"
+
+	_, err := db.Exec(q, userID, sett.ShowMeAges, sett.HideMeFromAges)
+	if err != nil {
+		return errors.New("Age range settings update error: " + err.Error())
+	}
+	return nil
 }
