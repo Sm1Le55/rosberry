@@ -1,43 +1,17 @@
 package database
 
 import (
-	"rosberry/model"
-	"database/sql"
-	"fmt"
-	"time"
-	"errors"
 	"crypto/rand"
-
-	_ "github.com/lib/pq"
+	"errors"
+	"fmt"
+	"rosberry/model"
+	"time"
 )
 
-type AuthResult int
-
-
-const (
-	AuthResultSuccess AuthResult = iota + 1
-	AuthResultUserNotFound
-	AuthResultAccessKeyExpired
-	AuthResultBadAccessKey
-)
-
-var db *sql.DB
-
-func NewDB() *sql.DB {
-	connStr := "user=postgres password=123 dbname=postgres search_path=rosberry_fsm sslmode=disable"
-	DB, err := sql.Open("postgres", connStr)
-	if err != nil {
-		fmt.Printf("Open db connect error: %v\n", err)
-		return nil
-	}
-	db = DB
-	return db
-}
-
-func AuthQuery(userID int,accessKey string) AuthResult {
+func AuthQuery(userID int, accessKey string) AuthResult {
 	var validAccessKey string
 	var accessKeyDateExpired time.Time
- 
+
 	err := db.QueryRow("SELECT accessKey, accessKeyExpireDate FROM users WHERE ID = $1", userID).Scan(&validAccessKey, &accessKeyDateExpired)
 	if err != nil {
 		fmt.Printf("Error database query: %\n", err)
@@ -49,7 +23,7 @@ func AuthQuery(userID int,accessKey string) AuthResult {
 	if validAccessKey == "" || accessKeyDateExpired.Before(time.Now()) {
 		return AuthResultAccessKeyExpired
 	}
-	if validAccessKey != accessKey{
+	if validAccessKey != accessKey {
 		return AuthResultBadAccessKey
 	}
 	return AuthResultSuccess
@@ -87,35 +61,35 @@ func getUserID(email string) int {
 	return userID
 }
 
-func Login(data model.UserLoginData) (model.UserAuthInfo, error) {
+func Login(data model.UserLoginData) (*model.UserAuthInfo, error) {
 	if !emailValidation(data.Email) {
-		return model.UserAuthInfo{}, errors.New("Not valid email")
+		return nil, errors.New("Not valid email")
 	}
 
 	userID := getUserID(data.Email)
-	if userID == 0{
-		return model.UserAuthInfo{}, errors.New("User not exists")
+	if userID == 0 {
+		return nil, errors.New("User not exists")
 	}
 
 	if !checkPassword(data.Email, data.Password) {
-		return model.UserAuthInfo{}, errors.New("Wrong password")
+		return nil, errors.New("Wrong password")
 	}
 
 	//update coord
 	_, err := db.Exec("INSERT AuthHistory SET latitude = $1, longitude =$2 where userID = $3", data.Latitude, data.Longitude, userID)
 	if err != nil {
-		return model.UserAuthInfo{}, errors.New("Auth history update error: " + err.Error())
+		return nil, errors.New("Auth history update error: " + err.Error())
 	}
 
 	//set access key
 	accessKey := generateAccessKey()
-	accessKeyExpireDate := time.Now().Add(time.Hour*24*7)
+	accessKeyExpireDate := time.Now().Add(time.Hour * 24 * 7)
 	_, err = db.Exec("UPDATE users SET accessKey = $1, accessKeyExpireDate =$2 where userID = $3", accessKey, accessKeyExpireDate, userID)
 	if err != nil {
-		return model.UserAuthInfo{}, errors.New("Key issue error: " + err.Error())
+		return nil, errors.New("Key issue error: " + err.Error())
 	}
 
-	return model.UserAuthInfo{userID, accessKey}, nil
+	return &model.UserAuthInfo{userID, accessKey}, nil
 }
 
 func checkPassword(email string, pass string) bool {
@@ -141,7 +115,7 @@ func generateAccessKey() string {
 
 	_, err := rand.Read(key)
 	if err != nil {
-		fmt.Println("Error key generate")	
+		fmt.Println("Error key generate")
 	}
 
 	fmt.Printf("Generate key: %x\n", key)
@@ -155,7 +129,7 @@ func Logout(email string) error {
 	}
 
 	userID := getUserID(email)
-	if userID == 0{
+	if userID == 0 {
 		return errors.New("User not exists")
 	}
 
@@ -167,24 +141,6 @@ func Logout(email string) error {
 	return nil
 }
 
-func ThemesListQuery() ([]model.Theme, error) {
-	rows, err := db.Query("SELECT ID, title FROM themes")
-	if err != nil {
-		return nil, errors.New("Themes query error: " + err.Error())
-	}
-	defer rows.Close()
-
-	result := make([]model.Theme, 0)
-	for rows.Next() {
-		theme := model.Theme{}
-		err := rows.Scan(&theme.Id, &theme.Title)
-		if err != nil {
-			fmt.Printf("Error row scan: %v\n", err)
-			continue
-		}
-		result = append(result, theme)
-	}
-
-	return result, nil
+func DisplatSettingsQuery(userID int) (*model.DisplaySettings, error) {
+	return nil, nil
 }
-
