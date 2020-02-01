@@ -5,6 +5,18 @@ CREATE SCHEMA AUTHORIZATION rosberry_fsm;
 
 SET schema 'rosberry_fsm';
 
+CREATE OR REPLACE FUNCTION trigger_set_country()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF NEW.latitude > 50 then
+    NEW.coutry = 'russia';
+  ELSE
+    NEW.coutry = 'australia';
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
 CREATE TABLE Users (
     ID serial NOT NULL,
     email varchar(255) NOT NULL UNIQUE,
@@ -35,6 +47,7 @@ CREATE TABLE Locations (
   OIDS=FALSE
 );
 
+
 CREATE TABLE LocationSettings (
     userID integer NOT NULL UNIQUE,
     location integer NOT NULL
@@ -48,10 +61,16 @@ CREATE TABLE AuthHistory (
 	time timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	latitude FLOAT NOT NULL,
 	longitude FLOAT NOT NULL,
+    coutry varchar, -- simplified
 	CONSTRAINT AuthHistory_pk PRIMARY KEY (ID)
 ) WITH (
   OIDS=FALSE
 );
+
+CREATE TRIGGER set_country
+BEFORE INSERT ON AuthHistory
+FOR EACH ROW
+EXECUTE PROCEDURE trigger_set_country();
 
 CREATE TABLE AgeSettings (
 	userID integer NOT NULL UNIQUE,
