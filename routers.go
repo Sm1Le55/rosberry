@@ -23,6 +23,7 @@ type Route struct {
 	Method      string
 	Pattern     string
 	HandlerFunc http.HandlerFunc
+	AuthNeed    bool
 }
 
 type Routes []Route
@@ -31,8 +32,14 @@ func NewRouter() *mux.Router {
 	router := mux.NewRouter().StrictSlash(true)
 	for _, route := range routes {
 		handler := route.HandlerFunc
-		authHandler := middleware.Auth(handler) //!Не все методы требуют аутентификацию по ключу
-		logHandler := middleware.Logger(authHandler, route.Name)
+		var logHandler http.Handler
+
+		if route.AuthNeed {
+			authHandler := middleware.Auth(handler) //!Не все методы требуют аутентификацию по ключу
+			logHandler = middleware.Logger(authHandler, route.Name)
+		} else {
+			logHandler = middleware.Logger(handler, route.Name)
+		}
 
 		router.
 			Methods(route.Method).
@@ -46,38 +53,11 @@ func NewRouter() *mux.Router {
 
 var routes = Routes{
 	Route{
-		"GetUserProfile",
-		strings.ToUpper("Get"),
-		"/Sm1Le55/Rosberry/0.0.1/profile/get/{userId}",
-		api.GetUserProfile,
-	},
-
-	Route{
-		"ShowProfiles",
-		strings.ToUpper("Get"),
-		"/Sm1Le55/Rosberry/0.0.1/profile/getList",
-		api.ShowProfiles,
-	},
-
-	Route{
-		"UpdateUserProfile",
+		"RegistrationUser",
 		strings.ToUpper("Post"),
-		"/Sm1Le55/Rosberry/0.0.1/profile/update",
-		api.UpdateUserProfile,
-	},
-
-	Route{
-		"ThemesList",
-		strings.ToUpper("Get"),
-		"/Sm1Le55/Rosberry/0.0.1/themes",
-		api.ThemesList,
-	},
-
-	Route{
-		"GetDisplaySettings",
-		strings.ToUpper("Get"),
-		"/Sm1Le55/Rosberry/0.0.1/user/settings/{userId}",
-		api.GetDisplaySettings,
+		"/Sm1Le55/Rosberry/0.0.1/user/registration",
+		api.RegistrationUser,
+		false,
 	},
 
 	Route{
@@ -85,6 +65,7 @@ var routes = Routes{
 		strings.ToUpper("Post"),
 		"/Sm1Le55/Rosberry/0.0.1/user/login",
 		api.LoginUser,
+		false,
 	},
 
 	Route{
@@ -92,13 +73,47 @@ var routes = Routes{
 		strings.ToUpper("Post"),
 		"/Sm1Le55/Rosberry/0.0.1/user/logout",
 		api.LogoutUser,
+		true,
 	},
 
 	Route{
-		"RegistrationUser",
+		"GetUserProfile",
+		strings.ToUpper("Get"),
+		"/Sm1Le55/Rosberry/0.0.1/profile/get/{userId}",
+		api.GetUserProfile,
+		true,
+	},
+
+	Route{
+		"ShowProfiles",
+		strings.ToUpper("Get"),
+		"/Sm1Le55/Rosberry/0.0.1/profile/getList",
+		api.ShowProfiles,
+		true,
+	},
+
+	Route{
+		"UpdateUserProfile",
 		strings.ToUpper("Post"),
-		"/Sm1Le55/Rosberry/0.0.1/user/registration",
-		api.RegistrationUser,
+		"/Sm1Le55/Rosberry/0.0.1/profile/update",
+		api.UpdateUserProfile,
+		true,
+	},
+
+	Route{
+		"ThemesList",
+		strings.ToUpper("Get"),
+		"/Sm1Le55/Rosberry/0.0.1/themes",
+		api.ThemesList,
+		true,
+	},
+
+	Route{
+		"GetDisplaySettings",
+		strings.ToUpper("Get"),
+		"/Sm1Le55/Rosberry/0.0.1/user/settings/{userId}",
+		api.GetDisplaySettings,
+		true,
 	},
 
 	Route{
@@ -106,5 +121,6 @@ var routes = Routes{
 		strings.ToUpper("Post"),
 		"/Sm1Le55/Rosberry/0.0.1/user/settings/set",
 		api.SetDisplaySettings,
+		true,
 	},
 }
