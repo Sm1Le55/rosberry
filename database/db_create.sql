@@ -8,10 +8,10 @@ SET schema 'rosberry_fsm';
 CREATE OR REPLACE FUNCTION trigger_set_country()
 RETURNS TRIGGER AS $$
 BEGIN
-  IF NEW.latitude > 50 then
-    NEW.coutry = 'russia';
+  IF NEW.coord[0] > 50 then
+    NEW.country = 'russia';
   ELSE
-    NEW.coutry = 'australia';
+    NEW.country = 'australia';
   END IF;
   RETURN NEW;
 END;
@@ -59,9 +59,8 @@ CREATE TABLE AuthHistory (
 	ID serial NOT NULL,
 	userID integer NOT NULL,
 	time timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	latitude FLOAT NOT NULL,
-	longitude FLOAT NOT NULL,
-    coutry varchar, -- simplified
+	coord point NOT NULL,
+    country varchar, -- simplified
 	CONSTRAINT AuthHistory_pk PRIMARY KEY (ID)
 ) WITH (
   OIDS=FALSE
@@ -219,3 +218,43 @@ VALUES
     (2, 3),
     (1, 3),
     (1, 1);
+
+INSERT INTO authhistory(userid, "time", coord)
+VALUES 
+(1, '2020-01-01 04:44:17.519673', '55.7455, 59.1523'),
+(1, '2020-02-01 08:04:17.519673', '49.1215, 88.1227'),
+(2, '2020-02-01 10:04:17.519673', '55.5615, 59.5527'),
+(3, '2020-02-01 08:37:22.519673', '33.2215, 72.1224'),
+(4, '2020-02-02 04:04:17.519673', '47.3155, 24.1587');
+
+
+CREATE FUNCTION fdistance(src_lat double precision, src_lon double precision, dst_lat double precision, dst_lon double precision) RETURNS double precision
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+Distance double precision;
+BEGIN
+
+Distance = 6371 * 2 * ASIN(SQRT(
+    POWER(SIN((src_lat - ABS(dst_lat)) * PI()/180 / 2), 2) + 
+    COS(src_lat * PI()/180) * 
+    COS(ABS(dst_lat) * PI()/180) * 
+    POWER(SIN((src_lon - dst_lon) * PI()/180 / 2), 2)
+));
+RETURN Distance;
+END;
+$$;
+
+
+CREATE FUNCTION pointDistance(p1 point, p2 point) RETURNS double precision
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+Distance double precision;
+BEGIN
+
+Distance = rosberry_fsm.fdistance(p1[0], p1[1], p2[0], p2[1]);
+
+RETURN Distance;
+END;
+$$;
