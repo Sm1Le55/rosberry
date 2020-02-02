@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"rosberry/model"
+
+	"github.com/lib/pq"
 )
 
 func ProfilesListQuery(r *model.ListRequest) ([]model.Profile, error) {
@@ -24,17 +26,17 @@ func ProfilesListQuery(r *model.ListRequest) ([]model.Profile, error) {
 	fmt.Println("userLocationSettings: ", userLocationSettings)
 	switch userLocationSettings {
 	case 1:
-		return queryProfilesWorld(r.UserId, r.Limit, r.Offset)
+		return queryProfilesWorld([]int{r.UserId}, r.Limit, r.Offset)
 	case 2:
-		return queryProfilesCountry(r.UserId, r.Limit, r.Offset)
+		return queryProfilesCountry(r.UserId, []int{r.UserId}, r.Limit, r.Offset)
 	case 3:
-		return queryProfilesNearby(r.UserId, r.Limit, r.Offset)
+		return queryProfilesNearby(r.UserId, []int{r.UserId}, r.Limit, r.Offset)
 	}
 	return nil, errors.New("Unexpected error")
 }
 
-func queryProfilesWorld(userID, limit, offset int) ([]model.Profile, error) {
-	fmt.Println("World list query")
+func queryProfilesWorld(excludeIds []int, limit, offset int) ([]model.Profile, error) {
+	fmt.Println("World list query. Exclude: ", excludeIds)
 	q := `SELECT
 			profile.userID,
 			name,
@@ -44,7 +46,8 @@ func queryProfilesWorld(userID, limit, offset int) ([]model.Profile, error) {
 			country
 		FROM 
 			rosberry_fsm.profile
-		WHERE userID != $1
+		WHERE
+		NOT (userID = ANY ($1))
 		ORDER BY lastVisit
 		OFFSET $2
 		`
@@ -55,7 +58,7 @@ func queryProfilesWorld(userID, limit, offset int) ([]model.Profile, error) {
 		q += fmt.Sprintf(" LIMIT %v", limit)
 	}
 
-	rows, err := db.Query(q, userID, offset)
+	rows, err := db.Query(q, pq.Array(excludeIds), offset)
 	if err != nil {
 		return nil, err
 	}
@@ -111,8 +114,8 @@ func getUserInterestList(userID int) []int {
 	return result
 }
 
-func queryProfilesCountry(userID, limit, offset int) ([]model.Profile, error) {
-	fmt.Println("Country list query")
+func queryProfilesCountry(userID int, excludeIds []int, limit int, offset int) ([]model.Profile, error) {
+	fmt.Println("Country list query. Exclude: ", excludeIds)
 	var userCountry string
 	qUserCountry := `
 		SELECT country
@@ -150,7 +153,7 @@ func queryProfilesCountry(userID, limit, offset int) ([]model.Profile, error) {
 		WHERE 
 		auth.UserID = profile.UserID AND
 		country = $3 AND
-		profile.userID != $1
+		NOT (profile.userID = ANY ($1))
 		ORDER BY lastVisit
 		OFFSET $2
 	`
@@ -161,7 +164,7 @@ func queryProfilesCountry(userID, limit, offset int) ([]model.Profile, error) {
 		q += fmt.Sprintf(" LIMIT %v", limit)
 	}
 
-	rows, err := db.Query(q, userID, offset, userCountry)
+	rows, err := db.Query(q, pq.Array(excludeIds), offset, userCountry)
 	if err != nil {
 		return nil, err
 	}
@@ -202,7 +205,12 @@ func queryProfilesCountry(userID, limit, offset int) ([]model.Profile, error) {
 		offset = 0
 	}
 
-	additResult, err := queryProfilesWorld(userID, limit, offset)
+	exIds := make([]int, 0, len(result)+1)
+	exIds = append(exIds, userID)
+	for _, val := range result {
+		exIds = append(exIds, val.UserID)
+	}
+	additResult, err := queryProfilesWorld(exIds, limit, offset)
 	if err != nil {
 		return nil, err
 	}
@@ -211,8 +219,8 @@ func queryProfilesCountry(userID, limit, offset int) ([]model.Profile, error) {
 	return result, nil
 }
 
-func queryProfilesNearby(userID, limit, offset int) ([]model.Profile, error) {
-	fmt.Println("Nearby list query")
+func queryProfilesNearby(userID int, excludeIds []int, limit int, offset int) ([]model.Profile, error) {
+	fmt.Println("Nearby list query. Exclude: ", excludeIds)
 	type UserCoord struct {
 		X float32
 		Y float32
@@ -254,7 +262,7 @@ func queryProfilesNearby(userID, limit, offset int) ([]model.Profile, error) {
 	) auth
 	WHERE 
 	auth.UserID = profile.UserID AND
-	profile.userID != $1 AND
+	NOT (profile.UserID = ANY ($1)) AND
 	rosberry_fsm.pointDistance(coord, point($3, $4)) < $5
 	ORDER BY lastVisit
 	OFFSET $2
@@ -267,7 +275,7 @@ func queryProfilesNearby(userID, limit, offset int) ([]model.Profile, error) {
 	}
 
 	nerabyRadiusKM := 150
-	rows, err := db.Query(q, userID, offset, userCoord.X, userCoord.Y, nerabyRadiusKM)
+	rows, err := db.Query(q, pq.Array(excludeIds), offset, userCoord.X, userCoord.Y, nerabyRadiusKM)
 	if err != nil {
 		return nil, err
 	}
@@ -286,7 +294,6 @@ func queryProfilesNearby(userID, limit, offset int) ([]model.Profile, error) {
 			fmt.Printf("Error row scan: %v\n", err)
 			continue
 		}
-
 		interests := getUserInterestList(profile.UserID)
 		profile.Interests = interests
 
@@ -308,7 +315,12 @@ func queryProfilesNearby(userID, limit, offset int) ([]model.Profile, error) {
 		offset = 0
 	}
 	//We get entries from the general list
-	additResultCountry, err := queryProfilesCountry(userID, limit, offset)
+	exIds := make([]int, 0, len(result)+1)
+	exIds = append(exIds, userID)
+	for _, val := range result {
+		exIds = append(exIds, val.UserID)
+	}
+	additResultCountry, err := queryProfilesCountry(userID, exIds, limit, offset)
 	if err != nil {
 		return nil, err
 	}
@@ -329,7 +341,10 @@ func queryProfilesNearby(userID, limit, offset int) ([]model.Profile, error) {
 		offset = 0
 	}
 	//We get entries from the general list
-	additResultWorld, err := queryProfilesWorld(userID, limit, offset)
+	for _, val := range result {
+		exIds = append(exIds, val.UserID)
+	}
+	additResultWorld, err := queryProfilesWorld(exIds, limit, offset)
 	if err != nil {
 		return nil, err
 	}
