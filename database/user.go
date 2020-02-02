@@ -77,7 +77,7 @@ func Login(data model.UserLoginData) (*model.UserAuthInfo, error) {
 	}
 
 	//update coord
-	_, err := db.Exec("INSERT AuthHistory SET latitude = $1, longitude =$2 where userID = $3", data.Latitude, data.Longitude, userID)
+	_, err := db.Exec("INSERT INTO rosberry_fsm.AuthHistory(userid, time, coord) VALUES($1, $2, point($3,$4))", userID, time.Now(), data.Latitude, data.Longitude)
 	if err != nil {
 		return nil, errors.New("Auth history update error: " + err.Error())
 	}
@@ -85,7 +85,7 @@ func Login(data model.UserLoginData) (*model.UserAuthInfo, error) {
 	//set access key
 	accessKey := generateAccessKey()
 	accessKeyExpireDate := time.Now().Add(time.Hour * 24 * 7)
-	_, err = db.Exec("UPDATE users SET accessKey = $1, accessKeyExpireDate =$2 where userID = $3", accessKey, accessKeyExpireDate, userID)
+	_, err = db.Exec("UPDATE users SET accessKey = $1, accessKeyExpireDate =$2 where ID = $3", accessKey, accessKeyExpireDate, userID)
 	if err != nil {
 		return nil, errors.New("Key issue error: " + err.Error())
 	}

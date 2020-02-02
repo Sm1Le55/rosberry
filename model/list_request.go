@@ -10,9 +10,9 @@
 package model
 
 type ListRequest struct {
-	UserId int32 `json:"userId,omitempty"`
+	UserId int `json:"userId,omitempty"`
 
-	Limit int32 `json:"limit,omitempty"`
+	Limit int `json:"limit,omitempty"`
 
-	Offset int32 `json:"offset,omitempty"`
+	Offset int `json:"offset,omitempty"`
 }

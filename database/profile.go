@@ -4,17 +4,31 @@ import (
 	"errors"
 	"fmt"
 	"rosberry/model"
+	"strings"
 )
 
 func ProfileQuery(userID int) (*model.Profile, error) {
 	profile := model.Profile{}
 
-	qProfile := `SELECT userID,name,photo,birthday
+	qProfile := `
+	SELECT 
+	userID,
+	name,
+	'data:image/png;base64,' || encode(COALESCE(photo, (select avatar from rosberry_fsm.empty limit 1)),'base64') as photo,
+	birthday, 
+	(SELECT time FROM rosberry_fsm.authhistory a WHERE a.userID = profile.userID ORDER BY time LIMIT 1) as lastVisit,
+	country
 	FROM rosberry_fsm.Profile WHERE userID = $1`
 
-	err := db.QueryRow(qProfile, userID).Scan(&profile.UserID, &profile.Name, &profile.Avatar, &profile.Birthday)
+	err := db.QueryRow(qProfile, userID).Scan(&profile.UserID,
+		&profile.Name,
+		&profile.Avatar,
+		&profile.Birthday,
+		&profile.LastVisit,
+		&profile.Country)
+
 	if err != nil {
-		fmt.Printf("Error database query: %\n", err)
+		fmt.Printf("Error database query: %v\n", err)
 		return nil, err
 	}
 
@@ -62,10 +76,10 @@ func UpdateProfile(profile *model.Profile) error {
 }
 
 func updProfileQuery(profile *model.Profile) error {
-	q := `INSERT INTO rosberry_fsm.profile (userID, name, photo, birthday)
-			VALUES	($1, $2, $3, $4) ON CONFLICT (userID) DO UPDATE SET (name, photo, birthday) = ($2, $3, $4);`
+	q := `INSERT INTO rosberry_fsm.profile (userID, name, photo, birthday, country)
+			VALUES	($1, $2, decode($3,'base64'), $4, $5) ON CONFLICT (userID) DO UPDATE SET (name, photo, birthday, country) = ($2, decode($3,'base64'), $4, $5);`
 
-	_, err := db.Exec(q, profile.UserID, profile.Name, profile.Avatar, profile.Birthday) //Strings! must be ints
+	_, err := db.Exec(q, profile.UserID, profile.Name, strings.ReplaceAll(profile.Avatar, "data:image/png;base64,", ""), profile.Birthday, profile.Country) //Strings! must be ints
 	if err != nil {
 		return errors.New("Profile update error: " + err.Error())
 	}
@@ -88,8 +102,4 @@ func updUserIntr(userID int, intrs []int) error {
 	}
 
 	return nil
-}
-
-func ProfilesListQuery(r *model.ListRequest) ([]model.Profile, error) {
-	return []model.Profile{}, nil
 }

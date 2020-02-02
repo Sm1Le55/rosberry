@@ -21,4 +21,8 @@ type Profile struct {
 	Birthday time.Time `json:"birthday,omitempty"`
 
 	Interests []int `json:"interests,omitempty"`
+
+	LastVisit time.Time
+
+	Country string
 }

@@ -30,7 +30,7 @@ func GetUserProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	profile, err := database.DisplaySettingsQuery(userID)
+	profile, err := database.ProfileQuery(userID)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
