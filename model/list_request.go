@@ -9,8 +9,10 @@
 
 package model
 
-type UserAuthInfo struct {
-	UserId int32 `json:"userId,omitempty"`
+type ListRequest struct {
+	UserId int `json:"userId,omitempty"`
 
-	AccessKey string `json:"accessKey,omitempty"`
+	Limit int `json:"limit,omitempty"`
+
+	Offset int `json:"offset,omitempty"`
 }

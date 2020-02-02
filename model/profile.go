@@ -9,16 +9,20 @@
 
 package model
 
+import "time"
+
 type Profile struct {
-	UserId int32 `json:"userId,omitempty"`
+	UserID int `json:"userId,omitempty"`
 
 	Name string `json:"name,omitempty"`
-
 	// image data in base64
 	Avatar string `json:"avatar,omitempty"`
 
-	// birthday in ISO 8601
-	Birthday string `json:"birthday,omitempty"`
+	Birthday time.Time `json:"birthday,omitempty"`
 
-	Interests []string `json:"interests,omitempty"`
+	Interests []int `json:"interests,omitempty"`
+
+	LastVisit time.Time
+
+	Country string
 }

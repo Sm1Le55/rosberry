@@ -10,9 +10,9 @@
 package main
 
 import (
+	"net/http"
 	"rosberry/api"
 	"rosberry/middleware"
-	"net/http"
 	"strings"
 
 	"github.com/gorilla/mux"
@@ -44,19 +44,18 @@ func NewRouter() *mux.Router {
 	return router
 }
 
-
 var routes = Routes{
 	Route{
 		"GetUserProfile",
 		strings.ToUpper("Get"),
-		"/Sm1Le55/Rosberry/0.0.1/profile/{userId}",
+		"/Sm1Le55/Rosberry/0.0.1/profile/get/{userId}",
 		api.GetUserProfile,
 	},
 
 	Route{
 		"ShowProfiles",
 		strings.ToUpper("Get"),
-		"/Sm1Le55/Rosberry/0.0.1/profile/showList",
+		"/Sm1Le55/Rosberry/0.0.1/profile/getList",
 		api.ShowProfiles,
 	},
 

@@ -9,7 +9,7 @@
 
 package model
 
-type UserRegLoginData struct {
+type UserRegData struct {
 	Email string `json:"email,omitempty"`
 
 	// Password in MD5 hash

@@ -10,20 +10,90 @@
 package api
 
 import (
+	"encoding/json"
+	"fmt"
 	"net/http"
+	"rosberry/database"
+	"rosberry/model"
+	"strconv"
+
+	"github.com/gorilla/mux"
 )
 
 func GetUserProfile(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	userIDString := mux.Vars(r)["userId"]
+
+	userID, err := strconv.Atoi(userIDString)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	profile, err := database.ProfileQuery(userID)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	result, err := json.Marshal(profile)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write(result)
+}
+
+func UpdateUserProfile(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+
+	decoder := json.NewDecoder(r.Body)
+	var data model.Profile
+	err := decoder.Decode(&data)
+	fmt.Printf("request: %v\n", data)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(fmt.Sprintf("{\"error\":\"%v\"}", err)))
+		return
+	}
+
+	err = database.UpdateProfile(&data)
+	if err != nil {
+		fmt.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 	w.WriteHeader(http.StatusOK)
 }
 
 func ShowProfiles(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	w.WriteHeader(http.StatusOK)
-}
 
-func UpdateUserProfile(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	decoder := json.NewDecoder(r.Body)
+	var data model.ListRequest
+	err := decoder.Decode(&data)
+	fmt.Printf("request: %v\n", data)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(fmt.Sprintf("{\"error\":\"%v\"}", err)))
+		return
+	}
+
+	profiles, err := database.ProfilesListQuery(&data)
+	if err != nil {
+		fmt.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	result, err := json.Marshal(profiles)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
 	w.WriteHeader(http.StatusOK)
+	w.Write(result)
 }

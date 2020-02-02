@@ -10,10 +10,25 @@
 package api
 
 import (
-	"net/http"
+	"rosberry/database"
+	"net/http"	
+	"encoding/json"
 )
 
 func ThemesList(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+
+	themes, err := database.ThemesListQuery()
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	result, err := json.Marshal(themes)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 	w.WriteHeader(http.StatusOK)
+	w.Write(result)
 }

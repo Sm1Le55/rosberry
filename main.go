@@ -9,10 +9,11 @@
 
 package main
 
-import (
+import (	
 	"log"
-	"net/http"
-
+	"net/http"	
+	"rosberry/database"
+	
 	// WARNING!
 	// Change this to a fully-qualified import path
 	// once you place this file into your project.
@@ -24,8 +25,7 @@ import (
 
 func main() {
 	log.Printf("Server started")
-
+	database.NewDB()
 	router := NewRouter()
-
 	log.Fatal(http.ListenAndServe(":8080", router))
 }

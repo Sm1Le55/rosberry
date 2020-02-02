@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"rosberry/database"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -35,9 +36,8 @@ func Auth(next http.Handler) http.Handler {
 }
 
 func authVerification(userId int, accessKey string) bool {
-	//!!! It's stub! Need db
-	fmt.Printf("Verification user %v by key '%v'\n", userId, accessKey)
-	if userId == 1 && accessKey == "123" {
+	result := database.AuthQuery(userId, accessKey)
+	if result == database.AuthResultSuccess {
 		return true
 	}
 	return false
