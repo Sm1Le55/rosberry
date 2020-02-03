@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"rosberry/model"
 	"strings"
+
+	"github.com/lib/pq"
 )
 
 func ProfileQuery(userID int) (*model.Profile, error) {
@@ -17,7 +19,12 @@ func ProfileQuery(userID int) (*model.Profile, error) {
 	'data:image/png;base64,' || encode(COALESCE(photo, (select avatar from rosberry_fsm.empty limit 1)),'base64') as photo,
 	birthday, 
 	(SELECT time FROM rosberry_fsm.authhistory a WHERE a.userID = profile.userID ORDER BY time LIMIT 1) as lastVisit,
-	country
+	country,
+	array(
+        select theme
+        from rosberry_fsm.userinterest t 
+        where t.userID = $1
+	) as profileIntrst,
 	FROM rosberry_fsm.Profile WHERE userID = $1`
 
 	err := db.QueryRow(qProfile, userID).Scan(&profile.UserID,
@@ -25,14 +32,13 @@ func ProfileQuery(userID int) (*model.Profile, error) {
 		&profile.Avatar,
 		&profile.Birthday,
 		&profile.LastVisit,
-		&profile.Country)
+		&profile.Country,
+		pq.Array(&profile.Interests))
 
 	if err != nil {
 		fmt.Printf("Error database query: %v\n", err)
 		return nil, err
 	}
-
-	profile.Interests = interestsQuery(userID)
 
 	return &profile, nil
 }
@@ -86,7 +92,7 @@ func updProfileQuery(profile *model.Profile) error {
 	return nil
 }
 
-func updUserIntr(userID int, intrs []int) error {
+func updUserIntr(userID int, intrs []int64) error {
 	qDel := "DELETE FROM UserInterest WHERE userID = $1"
 	_, err := db.Exec(qDel, userID)
 	if err != nil {

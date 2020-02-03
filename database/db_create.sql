@@ -205,9 +205,7 @@ VALUES
 
 INSERT INTO HideInterestsSettings (userID, theme)
 VALUES
-    (4, 4),
-    (4, 2),
-    (3, 2),
+    (4, 1),
     (2, 3),
     (2, 1),
     (2, 3),

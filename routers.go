@@ -86,7 +86,7 @@ var routes = Routes{
 
 	Route{
 		"ShowProfiles",
-		strings.ToUpper("Get"),
+		strings.ToUpper("Post"),
 		"/Sm1Le55/Rosberry/0.0.1/profile/getList",
 		api.ShowProfiles,
 		true,

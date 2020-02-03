@@ -20,7 +20,7 @@ type Profile struct {
 
 	Birthday time.Time `json:"birthday,omitempty"`
 
-	Interests []int `json:"interests,omitempty"`
+	Interests []int64 `json:"interests,omitempty"`
 
 	LastVisit time.Time
 
