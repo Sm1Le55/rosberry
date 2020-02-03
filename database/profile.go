@@ -24,7 +24,7 @@ func ProfileQuery(userID int) (*model.Profile, error) {
         select theme
         from rosberry_fsm.userinterest t 
         where t.userID = $1
-	) as profileIntrst,
+	) as profileIntrst
 	FROM rosberry_fsm.Profile WHERE userID = $1`
 
 	err := db.QueryRow(qProfile, userID).Scan(&profile.UserID,
